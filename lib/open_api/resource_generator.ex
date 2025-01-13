@@ -63,6 +63,7 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
             """
         end
 
+
       {:ok, [object]} =
         json
         |> ExJSONPath.eval(config[:object_type])
