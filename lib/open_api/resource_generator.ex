@@ -92,6 +92,9 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
               %{"type" => "string"} ->
                 ":string"
 
+              # %{"type" => "object"} ->
+              #   ":map"
+
               %{"type" => "array"} ->
                 ":map"
 
