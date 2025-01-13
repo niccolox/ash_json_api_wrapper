@@ -82,6 +82,9 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
               %{"enum" => _values} ->
                 ":atom"
 
+              %{"description" => _description} ->
+                ":string"
+
               %{"format" => "date-time"} ->
                 ":utc_datetime"
 
@@ -96,6 +99,8 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
 
               %{"type" => "boolean"} ->
                 ":boolean"
+
+
 
               other ->
                 raise "Unsupported property: #{inspect(other)}"
