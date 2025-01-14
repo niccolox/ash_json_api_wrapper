@@ -5,6 +5,7 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
   def generate(json, domain, main_config) do
     main_config[:resources]
     |> Enum.map(fn {resource, config} ->
+
       endpoints =
         json
         |> operations(config)
@@ -63,7 +64,6 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
             """
         end
 
-
       {:ok, [object]} =
         json
         |> ExJSONPath.eval(config[:object_type])
@@ -92,8 +92,8 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
               %{"type" => "string"} ->
                 ":string"
 
-              # %{"type" => "object"} ->
-              #   ":map"
+              %{"type" => "object"} ->
+                ":map"
 
               %{"type" => "array"} ->
                 ":map"
@@ -103,8 +103,6 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
 
               %{"type" => "boolean"} ->
                 ":boolean"
-
-
 
               other ->
                 raise "Unsupported property: #{inspect(other)}"
@@ -175,6 +173,7 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
           json_api_wrapper do
             #{tesla}
 
+            if #{endpoints} = ""
             endpoints do
               #{endpoint}
               #{endpoints}
