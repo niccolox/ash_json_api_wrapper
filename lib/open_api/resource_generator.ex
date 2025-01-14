@@ -8,7 +8,7 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
 
       endpoints =
         json
-        |> operations(config)
+       |> operations(config)
         |> Enum.map_join("\n\n", fn {path, _method, operation} ->
           entity_path =
             if config[:entity_path] do
@@ -25,7 +25,7 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
 
       actions =
         json
-        |> operations(config)
+       |> operations(config)
         |> Enum.map_join("\n\n", fn
           {_path, "get", config} ->
             """
@@ -166,33 +166,83 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
         end
 
       code =
-        """
-        defmodule #{resource} do
-          use Ash.Resource, domain: #{inspect(domain)}, data_layer: AshJsonApiWrapper.DataLayer
 
-          json_api_wrapper do
-            #{tesla}
+        case config[:path] do
+          "__schema__" ->
+            """
+            defmodule #{resource} do
+              use Ash.Resource, domain: #{inspect(domain)}, data_layer: AshJsonApiWrapper.DataLayer
 
-            if #{endpoints} = ""
-            endpoints do
-              #{endpoint}
-              #{endpoints}
+              actions do
+                #{actions}
+              end
+
+              attributes do
+                #{attributes}
+              end
             end
+            """
+            |> Code.format_string!()
+            |> IO.iodata_to_binary()
 
-            #{fields}
-          end
+            _ ->
+              """
+              defmodule #{resource} do
+                use Ash.Resource, domain: #{inspect(domain)}, data_layer: AshJsonApiWrapper.DataLayer
 
-          actions do
-            #{actions}
-          end
+                json_api_wrapper do
+                  #{tesla}
 
-          attributes do
-            #{attributes}
-          end
+                  if #{endpoints} = ""
+                  endpoints do
+                    #{endpoint}
+                    #{endpoints}
+                  end
+
+                  #{fields}
+                end
+
+                actions do
+                  #{actions}
+                end
+
+                attributes do
+                  #{attributes}
+                end
+              end
+              """
+              |> Code.format_string!()
+              |> IO.iodata_to_binary()
+
         end
-        """
-        |> Code.format_string!()
-        |> IO.iodata_to_binary()
+
+        # """
+        # defmodule #{resource} do
+        #   use Ash.Resource, domain: #{inspect(domain)}, data_layer: AshJsonApiWrapper.DataLayer
+
+        #   json_api_wrapper do
+        #     #{tesla}
+
+        #     if #{endpoints} = ""
+        #     endpoints do
+        #       #{endpoint}
+        #       #{endpoints}
+        #     end
+
+        #     #{fields}
+        #   end
+
+        #   actions do
+        #     #{actions}
+        #   end
+
+        #   attributes do
+        #     #{attributes}
+        #   end
+        # end
+        # """
+        # |> Code.format_string!()
+        # |> IO.iodata_to_binary()
 
       {resource, code}
     end)
