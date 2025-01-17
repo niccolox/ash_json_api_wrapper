@@ -23,6 +23,46 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
           """
         end)
 
+      ash_slug =
+        case{config[:ash_slug]} do
+          {:true} -> "AshSlug"
+          _ -> ""
+        end
+
+      ash_json =
+        case{config[:ash_json]} do
+          {:true} -> "AshJsonApi.Resource"
+          _ -> ""
+        end
+
+      ash_graphql =
+        case{config[:ash_graphql]} do
+          {:true} -> "AshGraphql.Resource"
+          _ -> ""
+        end
+
+      ash_admin =
+        case{config[:ash_admin]} do
+          {:true} -> "AshAdmin.Resource"
+          _ -> ""
+        end
+
+
+
+#      ash_extensions = "extensions: [ #{ash_slug <> "," <> ash_json <> "," <> ash_graphql <> "," <> ash_admin} ]"
+      ash_extensions = "extensions: [ AshSlug,AshJsonApi.Resource,AshGraphql.Resource,AshAdmin.Resource ]"
+      # ash_extensions = Enum.join([#{ash_slug}, "StringB"], ",")
+
+      # """
+      # #{ash_slug <> "," <> ash_json <> "," <> ash_graphql <> "," <> ash_admin}
+      # """
+
+      # state_machine =
+      #   case{config[:ash_state_machine]} do
+      #     {:true} -> "AshStateMachine"
+      #     _ -> ""
+      #   end
+
       actions =
         json
        |> operations(config)
@@ -167,11 +207,20 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
 
       code =
 
-        case config[:path] do
-          "__schema__" ->
+        case {config[:path]} do
+
+          # no endpoint
+          {"__schema__"} ->
             """
             defmodule #{resource} do
-              use Ash.Resource, domain: #{inspect(domain)}, data_layer: AshJsonApiWrapper.DataLayer
+              use Ash.Resource, domain: #{inspect(domain)},
+              data_layer: AshJsonApiWrapper.DataLayer
+
+              resource do
+                require_primary_key? false
+              end
+
+
 
               actions do
                 #{actions}
@@ -185,15 +234,27 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
             |> Code.format_string!()
             |> IO.iodata_to_binary()
 
+            # everything else
             _ ->
               """
               defmodule #{resource} do
-                use Ash.Resource, domain: #{inspect(domain)}, data_layer: AshJsonApiWrapper.DataLayer
+                use Ash.Resource,
+                domain: #{domain},
+                data_layer: AshJsonApiWrapper.DataLayer,
+                extensions: [
+                  AshAdmin.Resource,
+                  AshJsonApi.Resource,
+                  AshGraphql.Resource,
+                  AshSlug
+                ]
+
+                resource do
+                  require_primary_key? false
+                end
 
                 json_api_wrapper do
                   #{tesla}
 
-                  if #{endpoints} = ""
                   endpoints do
                     #{endpoint}
                     #{endpoints}
@@ -246,6 +307,11 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
 
       {resource, code}
     end)
+  end
+
+  def create_list(ash_slug, ash_json, ash_graphql, ash_admin) do
+    list = for var <- [ash_slug, ash_json, ash_graphql, ash_admin], var != nil, do: var
+    Enum.join(list, ", ")
   end
 
   defp operation_id(%{"operationId" => operationId}) do
