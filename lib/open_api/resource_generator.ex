@@ -47,21 +47,11 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
           _ -> ""
         end
 
-
-
-#      ash_extensions = "extensions: [ #{ash_slug <> "," <> ash_json <> "," <> ash_graphql <> "," <> ash_admin} ]"
-      ash_extensions = "extensions: [ AshSlug,AshJsonApi.Resource,AshGraphql.Resource,AshAdmin.Resource ]"
-      # ash_extensions = Enum.join([#{ash_slug}, "StringB"], ",")
-
-      # """
-      # #{ash_slug <> "," <> ash_json <> "," <> ash_graphql <> "," <> ash_admin}
-      # """
-
-      # state_machine =
-      #   case{config[:ash_state_machine]} do
-      #     {:true} -> "AshStateMachine"
-      #     _ -> ""
-      #   end
+      ash_state_machine =
+        case{config[:ash_state_machine]} do
+          {:true} -> "AshStateMachine"
+          _ -> ""
+        end
 
       actions =
         json
@@ -213,13 +203,19 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
           {"__schema__"} ->
             """
             defmodule #{resource} do
-              use Ash.Resource, domain: #{inspect(domain)},
-              data_layer: AshJsonApiWrapper.DataLayer
+              use Ash.Resource,
+              domain: #{inspect(domain)},
 
-              resource do
-                require_primary_key? false
-              end
+              extensions: [
+                  AshAdmin.Resource,
+                  AshJsonApi.Resource,
+                  AshGraphql.Resource,
+                  AshSlug
+              ]
 
+                resource do
+                  require_primary_key? false
+                end
 
 
               actions do
@@ -240,13 +236,19 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
               defmodule #{resource} do
                 use Ash.Resource,
                 domain: #{domain},
-                data_layer: AshJsonApiWrapper.DataLayer,
                 extensions: [
                   AshAdmin.Resource,
                   AshJsonApi.Resource,
                   AshGraphql.Resource,
                   AshSlug
                 ]
+
+
+                #{inspect(ash_state_machine)}
+                #{inspect(ash_slug)}
+                #{inspect(ash_json)}
+                #{inspect(ash_graphql)}
+                #{inspect(ash_admin)}
 
                 resource do
                   require_primary_key? false
@@ -264,7 +266,9 @@ defmodule AshJsonApiWrapper.OpenApi.ResourceGenerator do
                 end
 
                 actions do
+
                   #{actions}
+
                 end
 
                 attributes do
